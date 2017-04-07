@@ -56,17 +56,15 @@ final class Twig_Extension_Escaper extends Twig_Extension
             );
         }
 
-        if (!empty($is_safe_for)) {
-            $is_safe_for = array();
-        }
-        foreach ($is_safe_for as $safe_strategy) {
-            $this->escapers_safe[$safe_strategy][] = $strategy;
+        if (array_key_exists($strategy, $this->escapers_safe)) {
+            throw new Twig_Error_Runtime(sprintf("Strategy '%s' is already registered and cannot be overwritten due to caching of is_safe", $strategy));
         }
 
-        if (!empty($is_safe)) {
-            $is_safe = array();
+        $this->escapers_safe[$strategy] = array_merge(array($strategy), $is_safe_for);
+
+        foreach ($is_safe as $safe_strategy) {
+            $this->escapers_safe[$safe_strategy][] = $strategy;
         }
-        $this->escapers_safe[$strategy] = array_merge(array($strategy), $is_safe);
 
         return $this->core->setEscaper($strategy, $callable, true);
     }
@@ -367,7 +365,7 @@ function twig_escape_html_attr(Twig_Environment $env, $string, $charset)
          * entities that XML supports. Using HTML entities would result in this error:
          *     XML Parsing Error: undefined entity
          */
-        static $entityMap = array(
+        $entityMap = array(
             34 => 'quot', /* quotation mark */
             38 => 'amp',  /* ampersand */
             60 => 'lt',   /* less-than sign */
@@ -431,7 +429,7 @@ function twig_escape_filter_is_safe(Twig_Node $filterArgs, Twig_Environment $env
     foreach ($filterArgs as $arg) {
         if ($arg instanceof Twig_Node_Expression_Constant) {
             if ($env) {
-                $env->getExtension('Twig_Extension_Escaper')->getEscapersSafe();
+                return $env->getExtension('Twig_Extension_Escaper')->getEscapersSafe()[$arg->getAttribute('value')];
             }
 
             return array($arg->getAttribute('value'));

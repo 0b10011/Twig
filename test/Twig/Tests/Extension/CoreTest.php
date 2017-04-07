@@ -108,6 +108,44 @@ class Twig_Tests_Extension_CoreTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @expectedException Twig_Error_Runtime
+     */
+    public function testCustomEscaperOverwriting()
+    {
+        $string = "<foo bar='baz'>";
+
+        $twig = new Twig_Environment($this->getMockBuilder('Twig_LoaderInterface')->getMock());
+        $escaper = $twig->getExtension('Twig_Extension_Escaper');
+
+        $escaper->setEscaper('foo', 'foo_escaper_for_test');
+        $escaper->setEscaper('foo', 'foo_escaper_for_test', ['html']);
+    }
+
+    public function testCustomEscaperSafety()
+    {
+        $string = "<foo bar='baz'>";
+
+        $twig = new Twig_Environment(new Twig_Loader_Array(array(
+            'index.html' => '{{ string|e("foo") }}',
+        )));
+        $twig->getExtension('Twig_Extension_Escaper')->setEscaper('foo', 'foo_escaper_for_test', ['html']);
+
+        $this->assertSame("{$string}UTF-8", $twig->load("index.html")->render(array('string' => $string)));
+    }
+
+    public function testCustomEscaperUnsafe()
+    {
+        $string = "<foo bar='baz'>";
+
+        $twig = new Twig_Environment(new Twig_Loader_Array(array(
+            'index.html' => '{{ string|e("foo") }}',
+        )));
+        $twig->getExtension('Twig_Extension_Escaper')->setEscaper('foo', 'foo_escaper_for_test');
+
+        $this->assertSame("&lt;foo bar=&#039;baz&#039;&gt;UTF-8", $twig->load("index.html")->render(array('string' => $string)));
+    }
+
+    /**
      * @dataProvider provideCustomEscaperCases
      */
     public function testCustomEscaper($expected, $string, $strategy)
