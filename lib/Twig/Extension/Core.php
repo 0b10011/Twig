@@ -30,7 +30,7 @@ final class Twig_Extension_Core extends Twig_Extension
      */
     public function setEscaper($strategy, callable $callable, $ignoreDeprecation = false)
     {
-        if (!$ignoreDeprecation) {
+        if (false === $ignoreDeprecation) {
             @trigger_error("Twig_Extension_Core::setEscaper() is deprecated. Used Twig_Extension_Escaper::setEscaper() instead", E_USER_DEPRECATED);
         }
 
@@ -44,7 +44,7 @@ final class Twig_Extension_Core extends Twig_Extension
      */
     public function getEscapers($ignoreDeprecation = false)
     {
-        if (!$ignoreDeprecation) {
+        if (false === $ignoreDeprecation) {
             @trigger_error("Twig_Extension_Core::getEscapers() is deprecated. Used Twig_Extension_Escaper::getEscapers() instead", E_USER_DEPRECATED);
         }
 
