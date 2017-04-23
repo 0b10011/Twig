@@ -17,6 +17,7 @@
 final class Twig_ExtensionSet
 {
     private $extensions;
+    private $extensionAliases;
     private $initialized = false;
     private $runtimeInitialized = false;
     private $staging;
@@ -64,7 +65,7 @@ final class Twig_ExtensionSet
      */
     public function hasExtension($class)
     {
-        return isset($this->extensions[ltrim($class, '\\')]);
+        return isset($this->extensionAliases[$class]);
     }
 
     /**
@@ -76,13 +77,11 @@ final class Twig_ExtensionSet
      */
     public function getExtension($class)
     {
-        $class = ltrim($class, '\\');
-
-        if (!isset($this->extensions[$class])) {
-            throw new Twig_Error_Runtime(sprintf('The "%s" extension is not enabled.', $class));
+        if (isset($this->extensionAliases[$class])) {
+            return $this->extensionAliases[$class];
         }
 
-        return $this->extensions[$class];
+        throw new Twig_Error_Runtime(sprintf('The "%s" extension is not enabled.', $class));
     }
 
     /**
@@ -166,7 +165,10 @@ final class Twig_ExtensionSet
             throw new LogicException(sprintf('Unable to register extension "%s" as it is already registered.', $class));
         }
 
+        $class = ltrim($class, '\\');
         $this->extensions[$class] = $extension;
+        $this->extensionAliases[$class] = $extension;
+        $this->extensionAliases["\\\\$class"] = $extension;
     }
 
     public function addFunction(Twig_Function $function)

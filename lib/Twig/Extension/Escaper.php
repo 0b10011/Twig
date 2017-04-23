@@ -81,13 +81,13 @@ final class Twig_Extension_Escaper extends Twig_Extension
      */
     public function getEscapers()
     {
-        if (!isset($this->core)) {
-            throw new Twig_Error_Runtime(
-                "Environment must be provided to Twig_Extension_Escaper as the second argument to call this method on this object. If this isn't possible, you can temporarily use Twig_Extension_Core->getEscapers() instead"
-            );
+        if (isset($this->core)) {
+            return $this->core->getEscapers(true);
         }
 
-        return $this->core->getEscapers(true);
+        throw new Twig_Error_Runtime(
+            "Environment must be provided to Twig_Extension_Escaper as the second argument to call this method on this object. If this isn't possible, you can temporarily use Twig_Extension_Core->getEscapers() instead"
+        );
     }
 
     /**
@@ -220,25 +220,23 @@ function twig_raw_filter($string)
  */
 function twig_escape_filter(Twig_Environment $env, $string, $strategy = 'html', $charset = null, $autoescape = false)
 {
-    if ($autoescape === true && $string instanceof Twig_Markup) {
-        return $string;
-    }
-
-    elseif (!is_string($string)) {
-        if (is_object($string) && method_exists($string, '__toString')) {
+    if (!is_string($string)) {
+        if ($autoescape === true && $string instanceof Twig_Markup) {
+            return $string;
+        } elseif (is_object($string) && method_exists($string, '__toString')) {
             $string = (string) $string;
         } elseif (array_key_exists($strategy, array('html' => true, 'js' => true, 'css' => true, 'html_attr' => true, 'url' => true))) {
             return $string;
         }
     }
 
-    if (null === $charset) {
-        $charset = $env->getCharset();
-    }
-
     $escapers = $env->getExtension('Twig_Extension_Escaper')->getEscapers();
 
     if (isset($escapers[$strategy])) {
+        if (!isset($charset)) {
+            $charset = $env->getCharset();
+        }
+
         return $escapers[$strategy]($env, $string, $charset);
     }
 
