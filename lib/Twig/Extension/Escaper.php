@@ -230,7 +230,8 @@ function twig_escape_filter(Twig_Environment $env, $string, $strategy = 'html', 
         }
     }
 
-    $escapers = $env->getExtension('Twig_Extension_Escaper')->getEscapers();
+    // Temporarily use Core::getEscapers() for performance
+    $escapers = $env->getExtension('Twig_Extension_Core')->getEscapers(true);
 
     if (isset($escapers[$strategy])) {
         if (!isset($charset)) {
@@ -256,7 +257,7 @@ function twig_escape_html(Twig_Environment $env, $string, $charset)
     // each time the function is called.
     static $htmlspecialcharsCharsets;
 
-    if (null === $htmlspecialcharsCharsets) {
+    if (!isset($htmlspecialcharsCharsets)) {
         if (defined('HHVM_VERSION')) {
             $htmlspecialcharsCharsets = array('utf-8' => true, 'UTF-8' => true);
         } else {
